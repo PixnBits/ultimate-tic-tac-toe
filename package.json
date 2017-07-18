@@ -8,7 +8,7 @@
     "react-scripts": "1.0.10"
   },
   "scripts": {
-    "start": "npm run build && npm install serve && serve -p 3000 -s build",
+    "start": "npm run build && npm install serve && serve -p $PORT -s build",
     "start:dev": "react-scripts start",
     "build": "react-scripts build",
     "test": "react-scripts test --env=jsdom",
