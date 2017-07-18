@@ -2,19 +2,19 @@ import React from 'react';
 
 // use strokeDasharray and strokeDashoffset for animations
 
-function XMark({ height, width }) {
+function XMark({ height, width, className, style }) {
   return (
     <svg
       xmlns="http://www.w3.org/2000/svg"
-      className="x-mark"
+      className={`x-mark${className ? ` ${className}` : ''}`}
       aria-label="X"
       role="img"
       viewBox="0 0 32 32"
-      style={{
+      style={Object.assign({
         visibility: 'visible',
         height: height || '32px',
         width: width || '32px',
-      }}
+      }, style)}
     >
       <path
         d="M 4 4 L 28 28"

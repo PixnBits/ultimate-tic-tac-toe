@@ -11,15 +11,16 @@ class Game extends Component {
     this.state = {
       // players: [],
       cells: [
-        ['x', 'o', 'x', 'o', 'x', 'o', null, null, null],
-        ['o', 'x', 'o', 'x', 'o', 'x', null, null, null],
-        ['x', 'o', 'x', 'o', 'x', 'o', null, null, null],
-        [],
-        [],
-        [],
-        [],
-        [],
-        [],
+        [], [], [], [], [], [], [], [], [],
+        // ['x', 'o', 'x', 'o', 'x', 'o', 'x', null, null],
+        // ['o', 'x', 'o', 'x', 'o', 'x', null, null, 'o'],
+        // ['x', 'o', 'x', 'o', 'x', 'o', null, null, null],
+        // ['x', null, null, 'x', null, null, 'x', null, null],
+        // [null, 'o', null, null, 'o', null, null, 'o', null],
+        // [null, null, 'x', null, null, 'x', null, null, 'x'],
+        // [],
+        // [null, null, null, null, null, null, 'o', 'o', 'o'],
+        // [],
       ],
       turn: 'x',
     };
@@ -43,6 +44,10 @@ class Game extends Component {
 
   _claimCell(board, row, col) {
     const currentTurn = this.state.turn;
+    if (this.state.cells[board][row * 3 + col]) {
+      // already claimed
+      return;
+    }
     const newCells = copyCells(this.state.cells);
     newCells[board][row * 3 + col] = currentTurn;
     this.setState({

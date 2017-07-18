@@ -9,7 +9,7 @@ class App extends Component {
     return (
       <div className="App">
         <h1 className="App-header">
-          ULTIMATE <wbr />Tic-Tac-Toe
+          ULTIMATE Tic-Tac-Toe
         </h1>
         <Game />
       </div>
