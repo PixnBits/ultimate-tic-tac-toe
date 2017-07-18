@@ -11,7 +11,7 @@ class App extends Component {
         <h1 className="App-header">
           ULTIMATE Tic-Tac-Toe
         </h1>
-        <Game />
+        <Game onFinish={(winner) => console.log(winner === 'draw' ? 'draw' : `${winner} won!`)}/>
       </div>
     );
   }
