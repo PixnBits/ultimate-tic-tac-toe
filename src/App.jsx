@@ -12,6 +12,12 @@ class App extends Component {
           ULTIMATE Tic-Tac-Toe
         </h1>
         <Game onFinish={(winner) => console.log(winner === 'draw' ? 'draw' : `${winner} won!`)}/>
+
+        <p style={{fontSize: 'small'}}>
+          <a href="https://github.com/PixnBits/ultimate-tic-tac-toe/issues/new">
+            Suggestions?
+          </a>
+        </p>
       </div>
     );
   }
