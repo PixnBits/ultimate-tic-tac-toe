@@ -12,5 +12,7 @@ Development
 git clone git@github.com:PixnBits/ultimate-tic-tac-toe.git
 cd ultimate-tic-tac-toe
 npm install
-npm run start:dev
+npm run dev
 ```
+
+Originally a [create-react-app](https://github.com/facebookincubator/create-react-app). Ejected to add networked multiplayer.
