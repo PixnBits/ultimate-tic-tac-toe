@@ -1,17 +1,82 @@
 {
   "name": "ultimate-tic-tac-toe",
   "version": "0.1.1",
+  "description": "ULTIMATE Tic-Tac-Toe",
   "private": true,
-  "dependencies": {
-    "react": "^15.6.1",
-    "react-dom": "^15.6.1",
-    "react-scripts": "1.0.10"
-  },
   "scripts": {
-    "start": "npm run build && npm install serve && serve -p $PORT -s build",
-    "start:dev": "react-scripts start",
-    "build": "react-scripts build",
-    "test": "react-scripts test --env=jsdom",
-    "eject": "react-scripts eject"
+    "clean": "rimraf build",
+    "start": "node build/server",
+    "dev": "webpack --config config/webpack.config.server.js --env.development",
+    "prebuild": "npm ls --depth=0",
+    "build:client": "webpack --config config/webpack.config.client.js",
+    "build:server": "webpack --config config/webpack.config.server.js",
+    "build": "npm run build:server && npm run build:client",
+    "test:unit": "jest",
+    "test:lint": "eslint --ignore-path .gitignore .",
+    "test": "npm run test:unit && npm run test:lint",
+    "heroku-prebuild": "export NPM_CONFIG_PRODUCTION=false; export NODE_ENV=; NPM_CONFIG_PRODUCTION=false NODE_ENV=development npm install --only=dev --dev",
+    "heroku-postbuild": "export NPM_CONFIG_PRODUCTION=true; export NODE_ENV=production; ls -lah .; ls -lah build",
+    "postinstall": "npm run build"
+  },
+  "dependencies": {
+    "express": "^4.15.3",
+    "morgan": "^1.8.2",
+    "socket.io": "^2.0.3"
+  },
+  "devDependencies": {
+    "autoprefixer": "7.1.1",
+    "babel-core": "6.25.0",
+    "babel-eslint": "7.2.3",
+    "babel-jest": "20.0.3",
+    "babel-loader": "7.0.0",
+    "babel-preset-react-app": "^3.0.1",
+    "babel-runtime": "6.23.0",
+    "copy-webpack-plugin": "^4.0.1",
+    "css-loader": "0.28.4",
+    "eslint": "3.19.0",
+    "eslint-config-react-app": "^1.0.5",
+    "eslint-loader": "1.7.1",
+    "eslint-plugin-flowtype": "2.34.0",
+    "eslint-plugin-import": "2.2.0",
+    "eslint-plugin-jsx-a11y": "5.0.3",
+    "eslint-plugin-react": "7.1.0",
+    "file-loader": "0.11.2",
+    "html-webpack-plugin": "^2.29.0",
+    "identity-obj-proxy": "^3.0.0",
+    "jest": "20.0.4",
+    "object-assign": "4.1.1",
+    "postcss-flexbugs-fixes": "3.0.0",
+    "postcss-loader": "2.0.6",
+    "promise": "7.1.1",
+    "react": "^15.6.1",
+    "react-dev-utils": "^3.0.2",
+    "react-dom": "^15.6.1",
+    "react-error-overlay": "^1.0.9",
+    "rimraf": "^2.6.1",
+    "server-destroy": "^1.0.1",
+    "start-server-webpack-plugin": "^2.2.0",
+    "style-loader": "0.18.2",
+    "url-loader": "0.5.9",
+    "webpack": "2.6.1",
+    "webpack-dev-middleware": "^1.11.0",
+    "webpack-manifest-plugin": "1.1.0",
+    "webpack-node-externals": "^1.6.0",
+    "whatwg-fetch": "2.0.3"
+  },
+  "jest": {
+    "collectCoverageFrom": [
+      "src/**/*.{js,jsx}"
+    ],
+    "moduleNameMapper": {
+      "\\.css$": "identity-obj-proxy"
+    }
+  },
+  "babel": {
+    "presets": [
+      "react-app"
+    ]
+  },
+  "eslintConfig": {
+    "extends": "react-app"
   }
 }
