@@ -5,14 +5,18 @@
   "private": true,
   "scripts": {
     "clean": "rimraf build",
-    "start": "npm run clean && npm run build && npm prune && node build/server",
+    "start": "node build/server",
     "dev": "webpack --config config/webpack.config.server.js --env.development",
+    "prebuild": "npm ls --depth=0",
     "build:client": "webpack --config config/webpack.config.client.js",
     "build:server": "webpack --config config/webpack.config.server.js",
     "build": "npm run build:server && npm run build:client",
     "test:unit": "jest",
     "test:lint": "eslint --ignore-path .gitignore .",
-    "test": "npm run test:unit && npm run test:lint"
+    "test": "npm run test:unit && npm run test:lint",
+    "heroku-prebuild": "export NPM_CONFIG_PRODUCTION=false; export NODE_ENV=; NPM_CONFIG_PRODUCTION=false NODE_ENV=development npm install --only=dev --dev",
+    "heroku-postbuild": "export NPM_CONFIG_PRODUCTION=true; export NODE_ENV=production; ls -lah .; ls -lah build",
+    "postinstall": "npm run build"
   },
   "dependencies": {
     "express": "^4.15.3",
