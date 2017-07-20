@@ -42,10 +42,8 @@ module.exports = function (env) {
 
     plugins: [
       new webpack.DefinePlugin({
-        'process.env': {
-          'NODE_ENV': JSON.stringify(dev ? 'development' : 'production'),
-          // 'BUILD_TARGET': JSON.stringify('server'),
-        }
+        'process.env.NODE_ENV': JSON.stringify(dev ? 'development' : 'production'),
+        // 'process.env.BUILD_TARGET': JSON.stringify('server'),
       })
     ]
       .concat(
