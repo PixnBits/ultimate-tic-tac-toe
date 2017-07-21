@@ -9,9 +9,13 @@ class Game extends Component {
   constructor(props) {
     super(props);
 
-    this.state = Object.assign(getNewGameState(), {
-      // players: { x: null, o: null },
-    });
+    this.state = props.initialData ? (
+      props.initialData
+    ) : (
+      Object.assign(getNewGameState(), {
+        // players: { x: null, o: null },
+      })
+    );
 
     this.claimCell = this._claimCell.bind(this);
     this.newGame = this._newGame.bind(this);
@@ -38,15 +42,9 @@ class Game extends Component {
           cellType={GameGrid}
           claimCell={this.claimCell}
         />
-        {
-          this.state.turn ? (
-            null
-          ) : (
-            <button onClick={this.newGame}>
-              New Game
-            </button>
-          )
-        }
+        <button onClick={this.newGame}>
+          New Game
+        </button>
       </div>
     );
   }
@@ -66,11 +64,16 @@ class Game extends Component {
     newCells[board][row * 3 + col] = currentTurn;
     const gameWinner = boardWonBy(newCells);
 
-    this.setState({
+    const newState = {
       cells: newCells,
       turn: gameWinner ? null : (currentTurn === 'x' ? 'o' : 'x'),
       result: gameWinner,
-    });
+    };
+    this.setState(newState);
+
+    if (this.props.onCellClaimed) {
+      this.props.onCellClaimed.call(null, newState);
+    }
 
     if (gameWinner) {
       if (this.props.onFinish) {
@@ -81,6 +84,9 @@ class Game extends Component {
 
   _newGame() {
     this.setState(getNewGameState());
+    if (this.props.onNew) {
+      this.props.onNew.call(null);
+    }
   }
 }
 
