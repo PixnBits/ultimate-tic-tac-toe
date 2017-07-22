@@ -21,30 +21,46 @@ class Game extends Component {
     this.newGame = this._newGame.bind(this);
   }
 
+  componentWillReceiveProps(nextProps) {
+    console.log('componentWillReceiveProps nextProps', nextProps);
+    const nextState = {};
+    if (nextProps.cells) {
+      nextState.cells = nextProps.cells;
+    }
+    if (nextProps.turn) {
+      nextState.turn = nextProps.turn;
+    }
+
+    this.setState(nextState);
+  }
+
   render() {
-    const { cells } = this.state;
+    const { cells, turn, result } = this.state;
+    const { player } = this.props;
 
     return (
       <div className="game">
-        {
-          this.state.turn ? (
-            <h2>Turn: {this.state.turn.toUpperCase()}</h2>
-          ) : (
-            <h2>
-              {
-                this.state.result === 'draw' ? 'Draw' : 'Winner!'
-              }
-            </h2>
-          )
-        }
+        <h2>
+          { player && `Player: ${player.toUpperCase()}` }
+          { ' ' }
+          {
+            turn ? (
+              `Turn: ${turn.toUpperCase()}`
+            ) : (
+              result === 'draw' ? 'Draw' : 'Winner!'
+            )
+          }
+        </h2>
         <GameGrid
           cells={cells}
           cellType={GameGrid}
           claimCell={this.claimCell}
         />
-        <button onClick={this.newGame}>
-          New Game
-        </button>
+        { !player &&
+          <button onClick={this.newGame}>
+            New Game
+          </button>
+        }
       </div>
     );
   }
@@ -60,6 +76,12 @@ class Game extends Component {
       // already claimed
       return;
     }
+
+    if (this.props.onClaim) {
+      this.props.onClaim.call(null, { board, row, col });
+      return;
+    }
+
     const newCells = copyCells(this.state.cells);
     newCells[board][row * 3 + col] = currentTurn;
     const gameWinner = boardWonBy(newCells);

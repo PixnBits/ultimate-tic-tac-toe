@@ -1,8 +1,11 @@
-const path = require('path');
+import path from 'path';
 
-const express = require('express');
+import express from 'express';
+import morgan from 'morgan';
+
+import networkGame from './networkGame';
+
 const app = express();
-const morgan = require('morgan');
 
 const http = require('http').Server(app);
 const io = require('socket.io')(http);
@@ -24,8 +27,10 @@ io.on('connection', function(socket){
   console.log('a user connected');
 });
 
+networkGame(io);
+
 export default http;
-export {
-  app,
-  // io,
-};
+// export {
+//   app,
+//   io,
+// };

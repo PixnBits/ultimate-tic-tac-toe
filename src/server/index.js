@@ -1,4 +1,4 @@
-import server from './app';
+import server from './server';
 
 const PORT = process.env.PORT || 3000;
 var currentServer = server;
@@ -42,8 +42,8 @@ if (process.env.NODE_ENV === 'development' && module.hot) {
   }, 1000);
 
   // modules we can hot reload
-  module.hot.accept('./app', () => {
-    console.log('hot reloading ./app, closing server...');
+  module.hot.accept('./server', () => {
+    console.log('hot reloading ./server, closing server...');
     currentServer.destroy(() => {
       console.log('closed server');
       startServerListening();
