@@ -11,9 +11,11 @@ app.use(morgan(process.env.NODE_ENV === 'development' ? 'dev' : 'common'));
 
 if (process.env.NODE_ENV === 'development') {
   const webpack = require('webpack');
-  const webpackMiddleware = require('webpack-dev-middleware');
   const webpackClientConfig = require('../../config/webpack.config.client');
-  app.use(webpackMiddleware(webpack(webpackClientConfig({ development: true }))));
+  const compiler = webpack(webpackClientConfig({ development: true }));
+
+  app.use(require('webpack-hot-middleware')(compiler));
+  app.use(require('webpack-dev-middleware')(compiler));
 } else {
   app.get('*', express.static(path.resolve(path.join(__dirname, '../../build/public'))));
 }

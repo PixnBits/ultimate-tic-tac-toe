@@ -24,10 +24,14 @@ module.exports = function (env) {
     devtool: dev ? 'inline' : 'source-map',
     watch: dev,
 
-    entry: {
-      app: './src/client/index',
-      'service-worker': './src/client/service-worker',
-    },
+    entry: Object.assign(
+      { 'service-worker': './src/client/service-worker' },
+      dev ? {
+        app: ['./src/client/index', 'webpack-hot-middleware/client'],
+      } : {
+        app: './src/client/index',
+      }
+    ),
 
     output: {
       path: path.resolve(path.join(__dirname, '../build/public')),
@@ -50,6 +54,11 @@ module.exports = function (env) {
         minify: {
           removeComments: true,
         },
+        files: {
+          js: [
+            '/socket.io/socket.io.js',
+          ]
+        },
       }),
       // favicon.ico, etc
       new CopyWebpackPlugin([{ from: 'src/client/public' }]),
@@ -57,8 +66,8 @@ module.exports = function (env) {
       .concat(
         dev ? [
           new webpack.NamedModulesPlugin(),
-          // new webpack.HotModuleReplacementPlugin(),
-          // new webpack.NoEmitOnErrorsPlugin(),
+          new webpack.HotModuleReplacementPlugin(),
+          new webpack.NoEmitOnErrorsPlugin(),
         ] : [
           new webpack.optimize.UglifyJsPlugin({
             minimize: !dev,
