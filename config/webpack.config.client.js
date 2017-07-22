@@ -24,13 +24,14 @@ module.exports = function (env) {
     devtool: dev ? 'inline' : 'source-map',
     watch: dev,
 
-    entry: [
-      './src/client/index',
-    ],
+    entry: {
+      app: './src/client/index',
+      'service-worker': './src/client/service-worker',
+    },
 
     output: {
       path: path.resolve(path.join(__dirname, '../build/public')),
-      filename: 'bundle.js',
+      filename: '[name].js',
       publicPath: '/'
     },
 
@@ -39,6 +40,7 @@ module.exports = function (env) {
         'process.env': {
           'NODE_ENV': JSON.stringify(dev ? 'development' : 'production'),
           // 'BUILD_TARGET': JSON.stringify('web'),
+          'PUBLIC_URL': JSON.stringify(''),
         }
       }),
       // index.html
