@@ -4,10 +4,17 @@ import Game from './game/Game';
 
 import './App.css';
 
-const savedSoloGame = JSON.parse(localStorage.getItem('soloGame'));
+const savedSoloGame = global.localStorage ?
+  JSON.parse(global.localStorage.getItem('soloGame')) :
+  null;
 
 function writeSoloGameData(data) {
-  localStorage.setItem('soloGame', JSON.stringify(data));
+  if (!global.localStorage) {
+    return false;
+  }
+
+  global.localStorage.setItem('soloGame', JSON.stringify(data));
+  return true;
 }
 
 class App extends Component {
