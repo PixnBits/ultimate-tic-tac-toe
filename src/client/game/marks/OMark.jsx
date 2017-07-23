@@ -9,10 +9,20 @@ class OMark extends Component {
     this.state = {
       animationStep: 0,
     };
+    this._timeoutHandle = null;
   }
 
   componentDidMount() {
-    setTimeout(() => this.setState({ animationStep: 1 }));
+    this._timeoutHandle =  setTimeout(() => {
+      this.setState({ animationStep: 1 });
+      this._timeoutHandle = null;
+    });
+  }
+
+  componentWillUnmount() {
+    if (this._timeoutHandle) {
+      clearTimeout(this._timeoutHandle);
+    }
   }
 
   render() {

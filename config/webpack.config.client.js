@@ -76,7 +76,8 @@ module.exports = function (env) {
           new webpack.optimize.UglifyJsPlugin({
             minimize: !dev,
             compress: {
-              warnings: false
+              warnings: false,
+              drop_console: !dev,
             }
           }),
         ]

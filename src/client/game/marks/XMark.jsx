@@ -9,13 +9,23 @@ class XMark extends Component {
     this.state = {
       animationStep: 0,
     };
+    this._timeoutHandle = null;
   }
 
   componentDidMount() {
-    setTimeout(() => {
-      setTimeout(() => this.setState({ animationStep: 2 }), 150);
+    this._timeoutHandle = setTimeout(() => {
+      this._timeoutHandle = setTimeout(() => {
+        this._timeoutHandle = null;
+        this.setState({ animationStep: 2 });
+      }, 150);
       this.setState({ animationStep: 1 });
     });
+  }
+
+  componentWillUnmount() {
+    if (this._timeoutHandle) {
+      clearTimeout(this._timeoutHandle);
+    }
   }
 
   render() {

@@ -1,4 +1,4 @@
-export function boardWonBy(board) {
+export default function boardWonBy(board) {
   if (Array.isArray(board[0])) {
     // board of boards
     // look through each board to find all winnings

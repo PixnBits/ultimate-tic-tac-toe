@@ -1,8 +1,8 @@
-import { boardWonBy } from '../client/game/utils';
+import boardWonBy from '../utils/boardWonBy';
 
+const MAX_PAIRS_PER_ITERATION = 1e2;
 // FIXME: use redis for the data store (presistence between app deployments)
 const searches = [];
-// const games = [];
 
 export default function networkGame(io) {
   io.on('connection', (socket) => {
@@ -18,6 +18,7 @@ export default function networkGame(io) {
       losses: 0,
       draws: 0,
       interrupts: 0,
+      forfeits: 0,
     });
     socket.emit('named', socket.data.name);
 
@@ -64,11 +65,11 @@ function pairNetworkGameSearches() {
   // to prevent blocking the event loop, only pair max n games at a time
   var pairAttempts = 0;
   // console.log('searches.length', searches.length);
-  while ((searches.length > 1) && (pairAttempts++ < 1e2) ) {
+  while ((searches.length > 1) && (pairAttempts++ < MAX_PAIRS_PER_ITERATION) ) {
     // console.log('searches.length', searches.length);
     const searchXIndex = 0;
     const searchOIndex = searchXIndex + 1 + Math.floor((searches.length / 10) * Math.random());
-    console.log(`player indexes ${searchXIndex}, ${searchOIndex}`);
+    console.log(`search indexes ${searchXIndex}, ${searchOIndex}`);
     // removes an element, pull the later one first soas to not
     // disrupt the index of the earlier
     // (pull 3 first, then 2 otherwise 3 becomes 2 and that gets confusing)
@@ -87,90 +88,149 @@ function pairNetworkGameSearches() {
       // return;
     }
 
-    console.log(`players being paired: X ${searchX.socket.data.name}(${searchX.socket.id}), O ${searchO.socket.data.name}(${searchO.socket.id}), `);
-
-    const game = {
-      players: {
-        'x': searchX.socket,
-        'o': searchO.socket,
-      },
-      started: Date.now(),
-      cells: [ [], [], [], [], [], [], [], [], [] ],
-      turn: 'x',
-    };
-    // games.push(game);
-    ['x', 'o'].forEach((player) => {
-      const otherPlayer = player === 'x' ? 'o' : 'x';
-
-      game.players[player].on('networkGame::claimCell', ({board, row, col}) => {
-        if (player !== game.turn) {
-          // nacho turn!
-          return;
-        }
-        if (game.cells[board][row * 3 + col]) {
-          // already claimed
-          return;
-        }
-        game.cells[board][row * 3 + col] = player;
-        game.turn = otherPlayer;
-        ['x','o'].forEach(l => game.players[l].emit('networkGame::update', {
-          cells: game.cells,
-          turn: player === 'x' ? 'o' : 'x',
-        }));
-
-        const gameWinner = boardWonBy(game.cells);
-
-        if (gameWinner) {
-          switch(gameWinner) {
-            case 'draw':
-              game.players[player].data.draws += 1;
-              break;
-            case player:
-              game.players[player].data.wins += 1;
-              break;
-            case otherPlayer:
-              game.players[player].data.losses += 1;
-              break;
-          }
-
-          // do we need to store the game?
-          // remove if so, but otherwize unneeded
-          // const gameIndex = games.indexOf(game);
-        }
-
-        game.players[otherPlayer].on('disconnect', () => {
-          game.players[player].data.interrupts += 1;
-          // FIXME: make this more tolerant of bad connections
-          // TODO: ban otherPlayer after too many interrupts?
-
-          // FIXME: remove all listeners for both players
-          console.error('cleanup after opponent disconnect');
-        });
-
-        game.players[otherPlayer].on('networkGame::forfeit', () => {
-          // TODO: ban otherPlayer after too many forfeits?
-
-          // FIXME: remove all listeners for both players
-          console.error('cleanup after opponent forfeit');
-        });
-      });
-
-      game.players[player].emit('networkGame::paired', {
-        player,
-        opponentName: game.players[otherPlayer].data.name,
-      });
-
-      game.players[player].emit('networkGame::update', {
-        cells: game.cells,
-        turn: 'x',
-      });
-
-    });
+    makeAPairOfNetworkGameSearches(searchX, searchO);
   }
   // console.log('pairNetworkGameSearches finished');
 }
+
+function makeAPairOfNetworkGameSearches(searchX, searchO) {
+  const game = {
+    id: `${Date.now().toString(16)}-${Math.floor(Math.random() * 1e9).toString(16)}`,
+    players: {
+      'x': searchX.socket,
+      'o': searchO.socket,
+    },
+    started: Date.now(),
+    cells: process.env.NODE_ENV === 'development' ?
+      [ ['x','x','x'], ['x','x','x'], ['x','x'], [], [], [], ['o','o','o'], ['o','o','o'], ['o','o'], ] :
+      [ [], [], [], [], [], [], [], [], [] ],
+    turn: 'x',
+  };
+
+  console.log(`pairing players in game ${game.id}: X ${game.players.x.data.name}(${game.players.x.id}), O ${game.players.o.data.name}(${game.players.o.id})`);
+
+  ['x', 'o'].forEach((playerTick) => {
+    const otherPlayerTick = playerTick === 'x' ? 'o' : 'x';
+    const player = game.players[playerTick];
+    const otherPlayer = game.players[otherPlayerTick];
+
+    const claimCellHandler = ({board, row, col}) => {
+      if (playerTick !== game.turn) {
+        // nacho turn!
+        return;
+      }
+      if (game.cells[board][row * 3 + col]) {
+        // already claimed
+        return;
+      }
+      game.cells[board][row * 3 + col] = playerTick;
+      game.turn = otherPlayerTick;
+      ['x', 'o'].forEach(tick => game.players[tick].emit('networkGame::update', {
+        cells: game.cells,
+        turn: playerTick === 'x' ? 'o' : 'x',
+      }));
+
+      const wasAWinner = checkGameForWinnerAndUpdateStats(game);
+      if (wasAWinner) {
+        game.result = wasAWinner;
+        endAndCleanup();
+      }
+    }
+
+    const otherPlayerDisconnectHandler = () => {
+      player.data.interrupts += 1;
+      // FIXME: make this more tolerant of bad connections
+      // TODO: ban other player after too many interrupts?
+
+      otherPlayerForfeitHandler();
+    };
+
+    const otherPlayerForfeitHandler = () => {
+      console.log(`player ${otherPlayerTick} forfeit (game ${game.id})`);
+      // TODO: ban other player after too many forfeits?
+      game.result = 'forfeit';
+      otherPlayer.data.forfeits += 1;
+
+      endAndCleanup();
+    };
+
+
+    player.on('networkGame::claimCell', claimCellHandler);
+    otherPlayer.on('disconnect', otherPlayerDisconnectHandler);
+    otherPlayer.on('networkGame::forfeit', otherPlayerForfeitHandler);
+
+    function endAndCleanup() {
+      // clean up
+      otherPlayer.removeListener('disconnect', otherPlayerDisconnectHandler);
+
+      player.removeAllListeners('networkGame::claimCell');
+      otherPlayer.removeAllListeners('networkGame::claimCell');
+
+      player.removeAllListeners('networkGame::forfeit');
+      otherPlayer.removeAllListeners('networkGame::forfeit');
+
+      // end
+      game.turn = null;
+      const updateData = {
+        cells: game.cells,
+        turn: game.turn,
+        result: game.result,
+      };
+      player.emit('networkGame::update', updateData);
+      otherPlayer.emit('networkGame::update', updateData);
+    }
+
+    // everything set up, send the pairing and data to the players
+    player.emit('networkGame::paired', {
+      player: playerTick,
+      opponentName: otherPlayer.data.name,
+    });
+
+    player.emit('networkGame::update', {
+      cells: game.cells,
+      turn: game.turn,
+    });
+
+  });
+}
+
+function checkGameForWinnerAndUpdateStats(game) {
+  const {
+    cells,
+    players: {
+      x: playerX,
+      o: playerO
+    },
+  } = game;
+
+  const gameWinner = boardWonBy(cells);
+
+  if (!gameWinner) {
+    return;
+  }
+
+  game.finished = game.finished || Date.now();
+
+  switch(gameWinner) {
+    case 'draw':
+      playerX.data.draws += 1;
+      playerO.data.draws += 1;
+      break;
+    case 'x':
+      playerX.data.wins += 1;
+      playerO.data.losses += 1;
+      break;
+    case 'o':
+      playerX.data.losses += 1;
+      playerO.data.wins += 1;
+      break;
+  }
+
+  return gameWinner;
+}
+
 const intervalHandle = setInterval(pairNetworkGameSearches, 3e3);
-if (module.hot) {
+if (process.env.NODE_ENV === 'development' && module.hot) {
   module.hot.addDisposeHandler((data) => {
     console.log('disposing of networkGame.js, clearing interval');
     clearInterval(intervalHandle);

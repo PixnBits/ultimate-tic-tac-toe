@@ -1,7 +1,7 @@
 import React from 'react';
 
 import UserMark from './marks/UserMark';
-import { boardWonBy } from './utils';
+import boardWonBy from '../../utils/boardWonBy';
 
 import './GameGrid.css';
 

@@ -26,11 +26,11 @@ class App extends Component {
   constructor(props) {
     super();
 
-    this.findNetworkGame = this._findNetworkGame.bind(this);
     this.switchToLocalGame = this._switchToLocalGame.bind(this);
-    this.forfeitNetworkGame = this._forfeitNetworkGame.bind(this);
+    this.findNetworkGame = this._findNetworkGame.bind(this);
     this.networkGamePaired = this._networkGamePaired.bind(this);
     this.networkGameUpdate = this._networkGameUpdate.bind(this);
+    this.forfeitNetworkGame = this._forfeitNetworkGame.bind(this);
 
     this.state = {
       gamePlayState: 'localGame',
@@ -62,7 +62,9 @@ class App extends Component {
   }
 
   _forfeitNetworkGame() {
-    this.switchToLocalGame();
+    socket.once('networkGame::update', () => {
+      setTimeout(this.switchToLocalGame);
+    });
     socket.emit('networkGame::forfeit');
   }
 
@@ -75,12 +77,13 @@ class App extends Component {
     });
   }
 
-  _networkGameUpdate({ cells, turn }) {
-    console.log('networkGameUpdate', cells, turn);
+  _networkGameUpdate({ cells, turn, result }) {
+    console.log('networkGameUpdate', cells, turn, result);
     this.setState({
       gamePlayState: 'networkGame',
       cells,
       turn,
+      result,
     });
   }
 
@@ -103,19 +106,28 @@ class App extends Component {
   }
 
   renderNetworkGame() {
-    const { cells, turn, player } = this.state;
+    const { cells, turn, player, result } = this.state;
     return [
       <p key="game-type">
         Network Game
-        <button onClick={this.forfeitNetworkGame}>
-          Forfeit
-        </button>
+        {
+          result ? (
+            <button onClick={this.findNetworkGame}>
+              Find another game
+            </button>
+          ) : (
+            <button onClick={this.forfeitNetworkGame}>
+              Forfeit
+            </button>
+          )
+        }
       </p>,
       <Game
         key="game"
         player={player}
         cells={cells}
         turn={turn}
+        result={result}
         onClaim={({ board, row, col }) => socket.emit('networkGame::claimCell', {board, row, col})}
         onFinish={(winner) => {
           console.log(winner === 'draw' ? 'draw' : `${winner} won network game!`);

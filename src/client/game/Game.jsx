@@ -1,7 +1,7 @@
 import React, { Component } from 'react';
 
 import GameGrid from './GameGrid';
-import { boardWonBy } from './utils';
+import boardWonBy from '../../utils/boardWonBy';
 
 // import './Game.css';
 
@@ -9,29 +9,34 @@ class Game extends Component {
   constructor(props) {
     super(props);
 
-    this.state = props.initialData ? (
-      props.initialData
-    ) : (
-      Object.assign(getNewGameState(), {
-        // players: { x: null, o: null },
-      })
+    this.state = Object.assign(
+      getNewGameState(),
+      props.initialData || {},
+      this.buildStateFromProps(props),
     );
 
     this.claimCell = this._claimCell.bind(this);
     this.newGame = this._newGame.bind(this);
   }
 
+  buildStateFromProps(props) {
+    const state = {};
+    [
+      'cells',
+      'turn',
+      'result',
+    ]
+      .forEach(n => {
+        if (n in props) {
+          state[n] = props[n];
+        }
+      });
+    return state;
+  }
+
   componentWillReceiveProps(nextProps) {
     console.log('componentWillReceiveProps nextProps', nextProps);
-    const nextState = {};
-    if (nextProps.cells) {
-      nextState.cells = nextProps.cells;
-    }
-    if (nextProps.turn) {
-      nextState.turn = nextProps.turn;
-    }
-
-    this.setState(nextState);
+    this.setState(this.buildStateFromProps(nextProps));
   }
 
   render() {
@@ -40,14 +45,19 @@ class Game extends Component {
 
     return (
       <div className="game">
+        { player && (
+          <p>{`Player: ${player.toUpperCase()}`}</p>
+        )}
         <h2>
-          { player && `Player: ${player.toUpperCase()}` }
-          { ' ' }
           {
             turn ? (
               `Turn: ${turn.toUpperCase()}`
             ) : (
-              result === 'draw' ? 'Draw' : 'Winner!'
+              (result === 'draw' && 'Draw') ||
+              (result === 'forfeit' && 'Win by forfeit') ||
+              (result === player && 'Won!') ||
+              (result !== player && 'Lost') ||
+              result
             )
           }
         </h2>
