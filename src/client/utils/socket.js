@@ -1,3 +1,5 @@
+import io from 'io';
+
 const socket = io();
 
 socket.on('named', (name) => {

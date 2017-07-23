@@ -39,6 +39,10 @@ module.exports = function (env) {
       publicPath: '/'
     },
 
+    externals: {
+      'io': 'io',
+    },
+
     plugins: [
       new webpack.DefinePlugin({
         'process.env': {
